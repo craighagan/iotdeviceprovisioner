@@ -1,0 +1,39 @@
+# to create this
+# obtain AWS creds (set environment variables, run on an EC2 instance with a role attached, etc)
+#
+# export REGION=<region, e.g. us-east-1>
+# aws cloudformation --region ${REGION} create-stack --stack-name iotdevices-iam-base  --capabilities CAPABILITY_IAM --template-body file://create_iam_groups_and_policies.yml
+#
+# to update the stack:
+# get creds as before
+#
+# export REGION=<region, e.g. us-east-1>
+# aws cloudformation --region ${REGION} -stack --stack-name iotdevices-iam-base  --capabilities CAPABILITY_IAM --template-body file://create_iam_groups_and_policies.yml
+#
+Resources:
+  DeviceInitialRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: credentials.iot.amazonaws.com
+            Action:
+              - sts:AssumeRole
+#
+# change the policy as appropriate for your devices
+# I'm pulling chef recipes and docker containers
+# to run tools locally on my devices.
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSIoTThingsRegistration
+        - arn:aws:iam::aws:policy/service-role/AWSIoTLogging
+        - arn:aws:iam::aws:policy/service-role/AWSIoTRuleActions
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+Outputs:
+  DeviceInitialRole:
+    Description: The role that devices will obtain
+    Value:
+      Fn::GetAtt: [DeviceInitialRole, Arn]
