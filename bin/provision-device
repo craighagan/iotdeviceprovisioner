@@ -4,28 +4,22 @@ import argparse
 import os
 import platform
 import boto3
-import conduit_credential_provider
-from n19_seed_of_life_bootstrap import provision_device
-
+from iotdeviceprovisioner import provision_device
+from iotbotocredentialprovider.AWS import default_iot_metadata_path
 default_device_name = platform.node().replace(".", "_")
-default_seedoflife_dir = "/seedoflife"
-default_seedoflife_account = "716018085429"
-default_region = "us-east-1"
+
 default_stage = "beta"
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--account",
-                    help="The AWS Seed Of Life Device Account, needed for obtaining Conduit credentials",
-                    default=default_seedoflife_account)
 parser.add_argument("--device-name",
-                    help="The AWS Seed Of Life Device Name/ID",
+                    help="The AWS IoT Device Name/ID",
                     default=default_device_name)
 parser.add_argument("--directory",
-                    help="The path to store metadata and certificates",
-                    default=default_seedoflife_dir)
+                    help="The path to store IoT metadata and certificates defaults to %s" % default_iot_metadata_path,
+                    default=default_iot_metadata_path)
 parser.add_argument("--region",
                     help="Region in which to provision device",
-                    default=default_region)
+                    required=True)
 parser.add_argument("--stage",
                     help="Stage in which to provision device (beta, gamma, prod)",
                     default=default_stage)
@@ -33,25 +27,15 @@ parser.add_argument("--no-allow-rotate",
                     help="Normal behavior is to rotate certificates if a device is provisions, this forces provisioning to fail",
                     action="store_false",
                     default=True)
-parser.add_argument("--no-use-conduit",
-                    help="Do not use conduit for obtaining credentials, assume we can get them from HOSM, environment, or ~/.aws/credentials",
-                    action="store_true",
-                    default=False)
 
 args = parser.parse_args()
-
-if args.no_use_conduit and args.account:
-    raise ValueError("Only specify account id if using Conduit")
 
 if not os.path.isdir(args.directory):
     raise RuntimeError("%s must be a directory" % args.directory)
 
 
-if args.no_use_conduit:
-    boto3_session = boto3.session.Session(region_name=args.region)
-else:
-    boto3_session = conduit_credential_provider.get_boto3_session(args.account,
-                                                                  args.region)
+boto3_session = boto3.session.Session(region_name=args.region)
+
 provision_device(args.device_name,
                  args.stage,
                  args.directory,
