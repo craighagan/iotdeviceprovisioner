@@ -1,5 +1,6 @@
 
 import os
+import errno
 import json
 import datetime
 import logging
@@ -222,12 +223,20 @@ class DeviceProvisioner(BaseManagementClass):
         private_key_file = os.path.join(self.output_file_path, "%s.privatekey") % self.short_certificate_id
         public_key_file = os.path.join(self.output_file_path, "%s.publickey" % self.short_certificate_id)
 
+        if not os.path.isdir(self.output_file_path):
+            try:
+                os.makedirs(self.output_file_path)
+            except OSError as e:
+                if e.errno != errno.EEXIST:
+                    raise
+
         with open(pem_file, "w") as f:
             f.write(self.cert_response["certificatePem"])
             logging.info("wrote pem to %s", pem_file)
 
         with open(private_key_file, "w") as f:
             f.write(self.cert_response["keyPair"]["PrivateKey"])
+            os.chmod(private_key_file, 0o600)
             logging.info("wrote private key to %s", private_key_file)
 
         with open(public_key_file, "w") as f:
@@ -325,16 +334,18 @@ class DeviceProvisioner(BaseManagementClass):
             logging.info("wrote metadata")
 
     def save_metadata(self):
-        os.rename(self.metadata_filename, self.metadata_save_filename)
-        logging.info("saved metadata to %s", self.metadata_save_filename)
+        if os.path.exists(self.metadata_filename):
+            os.rename(self.metadata_filename, self.metadata_save_filename)
+            logging.info("saved metadata to %s", self.metadata_save_filename)
 
     def revert_metadata(self):
         os.rename(self.metadata_save_filename, self.metadata_filename)
         logging.info("put old metadata back in place")
 
     def delete_old_metadata(self):
-        os.unlink(self.metadata_save_filename)
-        logging.info("deleted old metadata file")
+        if os.path.exists(self.metadata_save_filename):
+            os.unlink(self.metadata_save_filename)
+            logging.info("deleted old metadata file")
 
     def get_metadata(self, filename=None):
         if filename is None:
