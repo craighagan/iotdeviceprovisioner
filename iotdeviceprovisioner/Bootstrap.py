@@ -312,6 +312,14 @@ class DeviceProvisioner(BaseManagementClass):
     @property
     def metadata(self):
         if not hasattr(self, "_metadata"):
+
+            # 32 bit devices currently can't describe certificates as expiration
+            # time overflows a 32bit int timestamp
+            try:
+                certificate_creation_date = self.get_certificate_info()['creationDate'].strftime(botocore.auth.ISO8601),
+            except Exception:
+                certificate_creation_date = None
+
             self._metadata = {
                 "account_id": self.account_id,
                 "stage": self.stage,
@@ -322,11 +330,14 @@ class DeviceProvisioner(BaseManagementClass):
                 "certificate_id": self.short_certificate_id,
                 "full_certificate_id": self.cert_response['certificateId'],
                 "certificate_arn": self.cert_response['certificateArn'],
-                "certificate_creation_date": self.get_certificate_info()['creationDate'].strftime(botocore.auth.ISO8601),
                 "role_alias_name": self.role_alias_name,
                 "nvram_data": self.get_all_nvram_data(),
             }
-        return self._metadata
+
+            if certificate_creation_date:
+                self._metadata["certificate_creation_date"] = certificate_creation_date
+
+            return self._metadata
 
     def write_metadata(self):
         with open(self.metadata_filename, "w") as f:
