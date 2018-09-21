@@ -218,6 +218,9 @@ class DeviceProvisioner(BaseManagementClass):
         self.short_certificate_id = self.cert_response['certificateId'][0:17]
         logging.info("created certificate")
 
+    def attach_policy_to_certificate(self, policy_name=default_policy_name):
+        self.iot_client.attach_policy(policyName=policy_name, target=self.cert_response['certificateArn'])
+
     def write_certificate_files(self):
         pem_file = os.path.join(self.output_file_path, "%s.pem" % self.short_certificate_id)
         private_key_file = os.path.join(self.output_file_path, "%s.privatekey") % self.short_certificate_id
@@ -439,6 +442,7 @@ class DeviceProvisioner(BaseManagementClass):
     def rotate_device_certificate(self):
         self.create_certificate()
         self.attach_certificate()
+        self.attach_policy_to_certificate()
         self.write_certificate_files()
         self.save_metadata()
         self.write_metadata()
