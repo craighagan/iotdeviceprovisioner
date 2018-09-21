@@ -276,6 +276,20 @@ class DeviceProvisioner(BaseManagementClass):
             _credential_endpoint = "https://" + o['endpointAddress']
         return _credential_endpoint
 
+    @property
+    def interaction_endpoint(self):
+        if not hasattr(self, "_interaction_endpoint"):
+            o = self.iot_client.describe_endpoint(endpointType="iot:Data")
+            _interaction_endpoint =  o['endpointAddress']
+        return _interaction_endpoint
+
+    @property
+    def jobs_endpoint(self):
+        if not hasattr(self, "_jobs_endpoint"):
+            o = self.iot_client.describe_endpoint(endpointType="iot:Jobs")
+            _jobs_endpoint = "https://" + o['endpointAddress']
+        return _jobs_endpoint
+
     def get_nvram_data(self, data_type):
         data = {}
         if not os.path.exists("/usr/bin/dmidecode"):
@@ -327,6 +341,8 @@ class DeviceProvisioner(BaseManagementClass):
                 "device_name": self.device_name,
                 "thing_arn": self.thing['thingArn'],
                 "credential_endpoint": self.credential_endpoint,
+                "interaction_endpoint": self.interaction_endpoint,
+                "jobs_endpoint": self.jobs_endpoint,
                 "certificate_id": self.short_certificate_id,
                 "full_certificate_id": self.cert_response['certificateId'],
                 "certificate_arn": self.cert_response['certificateArn'],
