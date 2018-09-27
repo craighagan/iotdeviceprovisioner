@@ -4,7 +4,7 @@ import os
 from setuptools import setup, find_packages
 
 setup(name='iotdeviceprovisioner',
-      version='1.1.3',
+      version='1.1.5',
       description='Configure AWS Account for provisioning AWS IoT devices to use iotbotocredentialprovider',
       author='Craig I. Hagan',
       author_email='hagan@cih.com',
