@@ -220,7 +220,7 @@ class DeviceProvisioner(BaseManagementClass):
 
     def attach_policy_to_certificate(self, policy_name=default_policy_name):
         self.iot_client.attach_policy(policyName=policy_name, target=self.cert_response['certificateArn'])
-        logging.info("attached policy from certificate %s", certificate_arn)
+        logging.info("attached policy from certificate %s", self.cert_response['certificateArn'])
 
     def detach_policy_from_certificate(self, certificate_arn, policy_name=default_policy_name):
         self.iot_client.detach_policy(policyName=policy_name, target=certificate_arn)
