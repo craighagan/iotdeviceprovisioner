@@ -338,7 +338,7 @@ class DeviceProvisioner(BaseManagementClass):
             # 32 bit devices currently can't describe certificates as expiration
             # time overflows a 32bit int timestamp
             try:
-                certificate_creation_date = self.get_certificate_info()['creationDate'].strftime(botocore.auth.ISO8601),
+                certificate_creation_date = self.get_certificate_info()['creationDate'].strftime(botocore.auth.ISO8601)
             except Exception:
                 certificate_creation_date = None
 
